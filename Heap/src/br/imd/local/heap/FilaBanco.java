@@ -11,7 +11,6 @@ public class FilaBanco implements IObserver {
     public Pessoa[] pessoas;
     private int size;//quantos elementos tem
     private int capacity; //quantos elementos pode ter
-    private ArrayList<Pessoa> observados = new ArrayList<Pessoa>();
 
     public FilaBanco() {
         this(10);
@@ -29,10 +28,18 @@ public class FilaBanco implements IObserver {
 
 
     public void addPessoa(Pessoa pessoa) {
-        observados.add(pessoa);
+        pessoa.register(this);
         this.ensureCapacity();
         this.pessoas[getSize()] = pessoa;
         heapifyUp(getSize());
+        size++;
+    }
+
+    public void addPessoa(Pessoa pessoa, int index) {
+        pessoa.register(this);
+        this.ensureCapacity();
+        this.pessoas[index] = pessoa;
+        heapifyUp(index);
         size++;
     }
 
@@ -43,7 +50,7 @@ public class FilaBanco implements IObserver {
         int parentIndex = getParentIndex(index);
 
         Pessoa node = pessoas[index];
-        Pessoa pai  = pessoas[parentIndex];
+        Pessoa pai = pessoas[parentIndex];
 
         if (node.getIdade() > pai.getIdade()) {
             pessoas[index] = pai;
@@ -63,7 +70,7 @@ public class FilaBanco implements IObserver {
     private void ensureCapacity() {
         if (getSize() == capacity) {
             this.pessoas = Arrays.copyOf(this.pessoas, getSize() * 2);
-            capacity     = getSize() * 2;
+            capacity = getSize() * 2;
         }
     }
 
@@ -72,7 +79,7 @@ public class FilaBanco implements IObserver {
     }
 
     public Pessoa peek() {
-        if (getSize() == 0)  {
+        if (getSize() == 0) {
             return null;
         }
 
@@ -80,60 +87,55 @@ public class FilaBanco implements IObserver {
     }
 
     public void remove() {
-        this.observados.remove(pessoas[0]);
+        pessoas[0].unregister(this);
         pessoas[0] = pessoas[getSize() - 1];
         pessoas[getSize() - 1] = null;
         size--;
         heapifyDown(0);
-   }
+    }
+
     public void remove(int index) {
-        this.observados.remove(pessoas[index]);
-        pessoas[index] = pessoas[index - 1];
-        pessoas[index - 1] = null;
+        pessoas[index].unregister(this);
+        pessoas[index] = pessoas[getSize() - 1];
+        pessoas[getSize() - 1] = null;
         size--;
-        heapifyDown(0);
+        heapifyDown(index);
     }
 
     private void heapifyDown(int index) {
-        int leftChild  = index * 2 + 1;
+        int leftChild = index * 2 + 1;
         int rightChild = index * 2 + 2;
-
         int childIndex = -1;
-
         if (leftChild < getSize()) {
             childIndex = leftChild;
         }
-
         if (childIndex < 0) {
             return;
         }
-
         if (rightChild < getSize()) {
             if (pessoas[rightChild].getIdade() > pessoas[leftChild].getIdade()) {
                 childIndex = rightChild;
             }
         }
-
         if (pessoas[index].getIdade() < pessoas[childIndex].getIdade()) {
-            Pessoa tmp          = pessoas[index];
-            pessoas[index]      = pessoas[childIndex];
+            Pessoa tmp = pessoas[index];
+            pessoas[index] = pessoas[childIndex];
             pessoas[childIndex] = tmp;
             heapifyDown(childIndex);
         }
     }
 
-    private int search(Pessoa p){
-        for (int i = 0; i < size; i++){
-            if (p == pessoas[i]){
+    private int search(Pessoa p) {
+        for (int i = 0; i < size; i++) {
+            if (p.equals(pessoas[i])) {
                 return i;
             }
         }
-        return -1;
+            return -1;
     }
-    public void update(ISubject current,int idade){
-        System.out.println("test");
-        this.pessoas[search((Pessoa)current)].setIdade(idade);
-        heapifyUp(0);
+        public void update(int idade_nova, Pessoa self){
+            int index = search(self);
+            Pessoa p = new Pessoa(self.getNome(),idade_nova);
+            pessoas[index] = p;
     }
-
 }

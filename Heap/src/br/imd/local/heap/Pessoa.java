@@ -30,7 +30,7 @@ public class Pessoa implements ISubject {
     public void setIdade(int idade) {
         this.idade_antiga = this.idade;
         this.idade = idade;
-        notificar();
+        notificar(this);
     }
 
     @Override
@@ -44,10 +44,17 @@ public class Pessoa implements ISubject {
     }
 
     @Override
-    public void notificar() {
+    public void notificar(Pessoa self) {
         for (IObserver i : observer){
-            i.update(this,idade_antiga);
-            idade_antiga = getIdade();
+            i.update(getIdade(),self);
         }
+    }
+    public boolean equals(Object o){
+        if (o instanceof Pessoa){
+               if (((Pessoa) o).getNome() == this.getNome() && ((Pessoa) o).getIdade() == this.getIdade()){
+                   return true;
+               }
+        }
+        return false;
     }
 }
